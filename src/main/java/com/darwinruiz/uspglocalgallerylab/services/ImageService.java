@@ -2,9 +2,11 @@ package com.darwinruiz.uspglocalgallerylab.services;
 
 import com.darwinruiz.uspglocalgallerylab.dto.UploadResult;
 import com.darwinruiz.uspglocalgallerylab.repositories.IFileRepository;
+import com.darwinruiz.uspglocalgallerylab.util.ImageValidator;
+import com.darwinruiz.uspglocalgallerylab.util.NamePolicy;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Part;
-
+import java.time.LocalDate;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Paths;
@@ -25,17 +27,55 @@ public class ImageService {
      *  - contar subidos/rechazados
      */
     public UploadResult uploadLocalImages(Collection<Part> parts) throws IOException, ServletException {
+        if (parts == null || parts.isEmpty()) {
+            return new UploadResult(0, 0, List.of());
+        }
+
         int ok = 0, bad = 0;
         List<String> saved = new ArrayList<>();
-        for (Part p : parts) {
-            if (!"file".equals(p.getName()) || p.getSize() == 0) continue;
-            String submitted = p.getSubmittedFileName();
-            String fileName = Paths.get(submitted).getFileName().toString();
-            // TODO: normalize + validate + save
-            try (InputStream in = p.getInputStream()) {
-                // ...
+        
+        for (Part part : parts) {
+            try {
+                // Skip non-file parts or empty files
+                if (part == null || !"file".equals(part.getName()) || part.getSize() == 0) {
+                    continue;
+                }
+                
+                String submittedFileName = part.getSubmittedFileName();
+                if (submittedFileName == null || submittedFileName.isBlank()) {
+                    bad++;
+                    continue;
+                }
+                
+                // Normalize the filename
+                String fileName = com.darwinruiz.uspglocalgallerylab.util.NamePolicy.normalize(submittedFileName);
+                
+                // Validate the file
+                if (!com.darwinruiz.uspglocalgallerylab.util.ImageValidator.isValid(part, fileName)) {
+                    bad++;
+                    continue;
+                }
+                
+                // Create dated subdirectory
+                String subdir = com.darwinruiz.uspglocalgallerylab.util.NamePolicy.datedSubdir(LocalDate.now());
+                
+                // Save the file
+                try (InputStream in = part.getInputStream()) {
+                    String savedPath = repo.save(subdir, fileName, in);
+                    if (savedPath != null && !savedPath.isBlank()) {
+                        saved.add(savedPath);
+                        ok++;
+                    } else {
+                        bad++;
+                    }
+                }
+            } catch (Exception e) {
+                bad++;
+                // Log the error if needed
+                e.printStackTrace();
             }
         }
+        
         return new UploadResult(ok, bad, saved);
     }
 }

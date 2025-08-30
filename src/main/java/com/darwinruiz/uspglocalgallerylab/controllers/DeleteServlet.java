@@ -24,7 +24,36 @@ public class DeleteServlet extends HttpServlet {
             resp.sendError(400, "path inválido");
             return;
         }
-        // TODO-5: llamar repo.delete(rel) y redirigir a la página actual
-        resp.sendRedirect(req.getContextPath() + "/list");
+        
+        try {
+            // Delete the file
+            repo.delete(rel);
+            
+            // Get current page and size parameters for redirection
+            String page = req.getParameter("page");
+            String size = req.getParameter("size");
+            
+            // Build the redirect URL with the same pagination parameters
+            String redirectUrl = req.getContextPath() + "/list";
+            if (page != null || size != null) {
+                redirectUrl += "?";
+                if (page != null) {
+                    redirectUrl += "page=" + page;
+                }
+                if (size != null) {
+                    if (page != null) {
+                        redirectUrl += "&";
+                    }
+                    redirectUrl += "size=" + size;
+                }
+            }
+            
+            // Redirect back to the list with the same pagination
+            resp.sendRedirect(redirectUrl);
+            
+        } catch (Exception e) {
+            // If deletion fails, redirect to list with error parameter
+            resp.sendRedirect(req.getContextPath() + "/list?error=delete_failed");
+        }
     }
 }
