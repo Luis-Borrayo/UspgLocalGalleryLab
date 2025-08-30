@@ -18,14 +18,6 @@ public class ImageService {
     private final IFileRepository repo;
     public ImageService(IFileRepository repo) { this.repo = repo; }
 
-    /** TODO-3:
-     *  - iterar partes "file"
-     *  - normalizar nombre (NamePolicy.normalize)
-     *  - validar (ImageValidator.isValid)
-     *  - subcarpeta = NamePolicy.datedSubdir(LocalDate.now())
-     *  - repo.save(subdir, fileName, data)
-     *  - contar subidos/rechazados
-     */
     public UploadResult uploadLocalImages(Collection<Part> parts) throws IOException, ServletException {
         if (parts == null || parts.isEmpty()) {
             return new UploadResult(0, 0, List.of());
