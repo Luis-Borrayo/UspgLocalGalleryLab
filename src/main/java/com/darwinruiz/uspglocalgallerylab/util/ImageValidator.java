@@ -14,18 +14,15 @@ public class ImageValidator {
      *  - extensión ∈ ALLOWED_EXT (en minúsculas)
      */
     public static boolean isValid(Part part, String fileName) {
-        // Check file size
         if (part.getSize() > MAX_BYTES) {
             return false;
         }
         
-        // Check content type
         String contentType = part.getContentType();
         if (contentType == null || !contentType.startsWith("image/")) {
             return false;
         }
         
-        // Check file extension
         String lowerFileName = fileName.toLowerCase();
         return ALLOWED_EXT.stream().anyMatch(lowerFileName::endsWith);
     }

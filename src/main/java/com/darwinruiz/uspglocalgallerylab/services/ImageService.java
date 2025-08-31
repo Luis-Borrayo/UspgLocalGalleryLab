@@ -28,7 +28,6 @@ public class ImageService {
         
         for (Part part : parts) {
             try {
-                // Skip non-file parts or empty files
                 if (part == null || !"file".equals(part.getName()) || part.getSize() == 0) {
                     continue;
                 }
@@ -39,19 +38,15 @@ public class ImageService {
                     continue;
                 }
                 
-                // Normalize the filename
                 String fileName = com.darwinruiz.uspglocalgallerylab.util.NamePolicy.normalize(submittedFileName);
                 
-                // Validate the file
                 if (!com.darwinruiz.uspglocalgallerylab.util.ImageValidator.isValid(part, fileName)) {
                     bad++;
                     continue;
                 }
                 
-                // Create dated subdirectory
                 String subdir = com.darwinruiz.uspglocalgallerylab.util.NamePolicy.datedSubdir(LocalDate.now());
                 
-                // Save the file
                 try (InputStream in = part.getInputStream()) {
                     String savedPath = repo.save(subdir, fileName, in);
                     if (savedPath != null && !savedPath.isBlank()) {
@@ -63,7 +58,6 @@ public class ImageService {
                 }
             } catch (Exception e) {
                 bad++;
-                // Log the error if needed
                 e.printStackTrace();
             }
         }

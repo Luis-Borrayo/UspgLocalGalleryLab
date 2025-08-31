@@ -25,7 +25,6 @@ public class ListServlet extends HttpServlet {
 
         List<String> all = repo.listByExtensionsRecursive("imagenes", ".png", ".jpg", ".jpeg", ".gif", ".webp");
 
-        // Get page and size parameters with defaults
         int page = 1, size = 12;
         try {
             String pageParam = req.getParameter("page");
@@ -38,32 +37,26 @@ public class ListServlet extends HttpServlet {
             
             if (sizeParam != null && !sizeParam.isEmpty()) {
                 size = Integer.parseInt(sizeParam);
-                if (size < 1) size = 12; // Ensure size is at least 1
+                if (size < 1) size = 12;
             }
         } catch (NumberFormatException e) {
-            // Use defaults if parsing fails
         }
 
-        // Calculate pagination
         int total = all.size();
         int fromIndex = (page - 1) * size;
         int toIndex = Math.min(fromIndex + size, total);
         
-        // Ensure fromIndex is within bounds
         if (fromIndex >= total) {
             fromIndex = Math.max(0, total - size);
             toIndex = total;
             page = fromIndex / size + 1;
         }
         
-        // Get sublist for current page
         List<String> pageItems = all.subList(fromIndex, toIndex);
         
-        // Calculate total pages
         int totalPages = (int) Math.ceil((double) total / size);
-        if (totalPages == 0) totalPages = 1; // At least one page even if empty
+        if (totalPages == 0) totalPages = 1;
         
-        // Set request attributes
         req.setAttribute("localImages", pageItems);
         req.setAttribute("page", page);
         req.setAttribute("size", size);
